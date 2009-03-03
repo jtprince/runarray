@@ -1,16 +1,28 @@
 = {Runarray}[http://rubyforge.org/projects/mspire]
 
-Runarray - Attempting to provide a fast, pure ruby implementation of NArray
-functionality.  Pronounced like Scooby-Doo saying 'Run away!'.
+Runarray - Attempting to provide a fast, pure ruby implementation of major
+NArray functionality. 
+
+Pronounced like Scooby-Doo saying 'Run away!'.
 
 Very much pre-alpha right now although some good functionality has been
 implemented.
 
 == Example
 
-    require 'runarray'  
-    include Runarray
 
+If you require the auto file then NArray is used if it is available.  If not, the Runarray module is included and one can seamlessly use NArray objects.
+
+    require 'runarray/auto'
+
+    na = NArray.float(4) # -> an NArray object if narray is available 
+                         # -> else an Runarray::NArray object
+
+
+=== Using Pure Ruby
+
+    require 'runarray/narray'  
+    include Runarray
     na = NArray.float(4) # ->  [ 0.0, 0.0, 0.0, 0.0 ]
 
 == Installation
