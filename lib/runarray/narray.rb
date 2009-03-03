@@ -65,7 +65,7 @@ module Runarray
     end
 
     def inspect
-    "<#{self.join(" ")}>" 
+      "[ #{self.join(", ")} ]" 
     end
 
     def select(&block)

@@ -1,0 +1,24 @@
+= {Runarray}[http://rubyforge.org/projects/mspire]
+
+Runarray - Attempting to provide a fast, pure ruby implementation of NArray
+functionality.  Pronounced like Scooby-Doo saying 'Run away!'.
+
+Very much pre-alpha right now although some good functionality has been
+implemented.
+
+== Example
+
+    require 'runarray'  
+    include Runarray
+
+    na = NArray.float(4) # ->  [ 0.0, 0.0, 0.0, 0.0 ]
+
+== Installation
+
+    gem install runarray
+
+== See Also
+
+http://narray.rubyforge.org/
+http://narray.rubyforge.org/SPEC.en
+
