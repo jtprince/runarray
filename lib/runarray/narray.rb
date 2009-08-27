@@ -740,6 +740,19 @@ module Runarray
     end
 
 
+    # these are given in inclusive terms output is the array used for placing
+    # the data in (expects same size).  If nil it will be in-place.
+    def clip(min, max, output=nil)
+      output ||= self
+      self.each_with_index do |v,i|
+        n = v
+        n = min if v < min 
+        n = max if v > max
+        output[i] = n
+      end
+      output
+    end
+
     # Returns (min, max)
     def min_max
       mn = self.first
@@ -750,6 +763,110 @@ module Runarray
       end
       return mn, mx
     end
+
+    # originally taken from a pastebin posting (2009-08-26) which is
+    # considered public domain. (http://en.pastebin.ca/1255734)
+    # self is considered the x values.  Returns y values at the x values given
+    def lowess(y, f=2.0/3.0, iter=3) 
+      x = self
+      n = x.size
+      r = (f*n).ceil.to_i
+      # h = [numpy.sort(numpy.abs(x-x[i]))[r] for i in range(n)]
+      (0...n).each { |i| (x-x[i]).abs.sort[r] }
+      raise NotImplementedError, "not finished!"
+       
+      #w = numpy.clip(numpy.abs(([x]-numpy.transpose([x]))/h),0.0,1.0)
+      #w = 1-w*w*w
+      #w = w*w*w
+      #yest = numpy.zeros(n)
+      #delta = numpy.ones(n)
+      #for iteration in range(iter):
+      #  for i in range(n):
+      #    weights = delta * w[:,i]
+      #  theta = weights*x
+      #  b_top = sum(weights*y)
+      #  b_bot = sum(theta*y)
+      #  a = sum(weights)
+      #  b = sum(theta)
+      #  d = sum(theta*x)
+      #  yest[i] = (d*b_top-b*b_bot+(a*b_bot-b*b_top)*x[i])/(a*d-b**2)
+      #  residuals = y-yest
+      #  s = numpy.median(abs(residuals))
+      #  delta = numpy.clip(residuals/(6*s),-1,1)
+      #  delta = 1-delta*delta
+      #  delta = delta*delta
+      #  return yest
+
+    end
+
+
+#"""
+#This module implements the Lowess function for nonparametric regression.
+
+#Functions:
+#lowess        Fit a smooth nonparametric regression curve to a scatterplot.
+
+#For more information, see
+
+#William S. Cleveland: "Robust locally weighted regression and smoothing
+#scatterplots", Journal of the American Statistical Association, December 1979,
+#volume 74, number 368, pp. 829-836.
+
+#William S. Cleveland and Susan J. Devlin: "Locally weighted regression: An
+#approach to regression analysis by local fitting", Journal of the American
+#Statistical Association, September 1988, volume 83, number 403, pp. 596-610.
+#"""
+
+#import numpy
+#try:
+    #from Bio.Cluster import median
+    ## The function median in Bio.Cluster is faster than the function median
+    ## in NumPy, as it does not require a full sort.
+#except ImportError, x:
+    ## Use the median function in NumPy if Bio.Cluster is not available
+    #from numpy import median
+
+#def lowess(x, y, f=2./3., iter=3):
+    #"""lowess(x, y, f=2./3., iter=3) -> yest
+
+#Lowess smoother: Robust locally weighted regression.
+#The lowess function fits a nonparametric regression curve to a scatterplot.
+#The arrays x and y contain an equal number of elements; each pair
+#(x[i], y[i]) defines a data point in the scatterplot. The function returns
+#the estimated (smooth) values of y.
+
+#The smoothing span is given by f. A larger value for f will result in a
+#smoother curve. The number of robustifying iterations is given by iter. The
+#function will run faster with a smaller number of iterations."""
+    #n = len(x)
+    #r = int(numpy.ceil(f*n))
+    #h = [numpy.sort(numpy.abs(x-x[i]))[r] for i in range(n)]
+    #w = numpy.clip(numpy.abs(([x]-numpy.transpose([x]))/h),0.0,1.0)
+    #w = 1-w*w*w
+    #w = w*w*w
+    #yest = numpy.zeros(n)
+    #delta = numpy.ones(n)
+    #for iteration in range(iter):
+        #for i in range(n):
+            #weights = delta * w[:,i]
+            #theta = weights*x
+            #b_top = sum(weights*y)
+            #b_bot = sum(theta*y)
+            #a = sum(weights)
+            #b = sum(theta)
+            #d = sum(theta*x)
+            #yest[i] = (d*b_top-b*b_bot+(a*b_bot-b*b_top)*x[i])/(a*d-b**2)
+        #residuals = y-yest
+        #s = numpy.median(abs(residuals))
+        #delta = numpy.clip(residuals/(6*s),-1,1)
+        #delta = 1-delta*delta
+        #delta = delta*delta
+    #return yest
+
+
+    end
+
+    alias_method :loess, :lowess
 
 =begin
   # complete rewrite of the 
