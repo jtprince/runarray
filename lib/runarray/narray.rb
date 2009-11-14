@@ -11,7 +11,16 @@ module Runarray
         build('float', *dims)
       end
 
+      def int(*dims)
+        build('int', *dims)
+      end
+
+      def to_na(arr)
+        new(arr)
+      end
+
       def [](*args)
+        new(args)
       end
 
       def build(typecode, *dims)
@@ -48,6 +57,7 @@ module Runarray
 
     TYPECODES = ['float', 'int']
 
+
     def initialize(*args)
       if TYPECODES.include?(args[0])
         self.class.build(*args)
@@ -76,10 +86,6 @@ module Runarray
       self.class.new(old_map(&block))
     end
 
-    def self.[](*ar)
-      self.prep(ar)
-    end
-
     def to_s
       self.join(" ")
     end
@@ -106,6 +112,25 @@ module Runarray
         x << it
       end
       x
+    end
+
+    method_alias :slice, :old_slice
+
+    def slice(*args)
+      if args.first == true
+        self.dup
+       #elsif
+#####################################################
+#####################################################
+#####################################################
+        # HERRER!
+#####################################################
+#####################################################
+#####################################################
+#####################################################
+#####################################################
+      # TODO: WORKING HERE!!
+      end
     end
 
     # for each value in mat, take a certain fraction and make it random
@@ -863,9 +888,6 @@ module Runarray
         #delta = delta*delta
     #return yest
 
-
-    end
-
     alias_method :loess, :lowess
 
 =begin
@@ -1097,7 +1119,6 @@ module Runarray
       (one.to_f + two.to_f)/2.0
     end
   end
-
 
 
 

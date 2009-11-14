@@ -1,34 +1,38 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require File.expand_path(File.dirname(__FILE__) + '/../narray_shared')
 
-require 'narray'
 require 'runarray/narray'
 
 class Object
-  alias_method :old_must_equal, :must_equal
+  # alias_method :old_must_equal, :must_equal
 
-  def must_equal(*args)
-    if self.is_a? Runarray::NArray
-      other = args.first
-      self.each_with_index do |v,i|
-        v.old_must_equal other[i]
-      end
-    else
-      self.old_must_equal(*args)
+ # def must_equal(*args)
+    #if self.is_a? Runarray::NArray
+      #other = args.first
+      #self.each_with_index do |v,i|
+        #v.old_must_equal other[i]
+      #end
+    #else
+      #self.old_must_equal(*args)
+    #end
+  #end
+
+end
+
+
+%w(float int).each do |typedef|
+  describe "an NArray #{typedef}" do
+    before do
+      @klass = Runarray::NArray
+      @typedef = typedef
     end
+    behaves_like 'an narray'
   end
-
 end
 
-class MimicNArrayUsageSpec < MiniTest::Spec
 
-  it 'initializes floats' do
-    na = NArray.float(10)
-    runa = Runarray::NArray.float(10)
-    runa.must_equal na
-  end
 
-end
-
+=begin
 class RunarrayNArrayUnitSpec < MiniTest::Spec
   include Runarray
 
@@ -36,6 +40,13 @@ class RunarrayNArrayUnitSpec < MiniTest::Spec
     super(*args)
     @klass = NArray
   end
+
+  it 'works with floats' do
+    na = NArray.float(10)
+    runa = Runarray::NArray.float(10)
+    runa.na
+  end
+
 
   it 'can be created with no arguments' do
     @klass = NArray
@@ -286,24 +297,24 @@ class RunarrayNArrayUnitSpec < MiniTest::Spec
 
   # TODO: fix this spec
   # something is wrong in this guy
-=begin
-  it 'can noisify its values' do
-    [[100,10,1],[-100,-10,-1]].each do |arr|
-      x = NArray.prep(arr)
-      xdup = x.dup
-      fraction = 0.1
 
-      10.times do 
-        # this line is suspect:
-        x = NArray.prep([0,2,3,5,6,8])
-        x.noisify!(fraction)
-        xdup.zip(x) do |arr|
-          arr[1].must_be_close_to(arr[0], (fraction*arr[0]).abs)
-        end
-      end
-    end
-  end
-=end
+
+#  it 'can noisify its values' do
+    #[[100,10,1],[-100,-10,-1]].each do |arr|
+      #x = NArray.prep(arr)
+      #xdup = x.dup
+      #fraction = 0.1
+
+      #10.times do 
+        ## this line is suspect:
+        #x = NArray.prep([0,2,3,5,6,8])
+        #x.noisify!(fraction)
+        #xdup.zip(x) do |arr|
+          #arr[1].must_be_close_to(arr[0], (fraction*arr[0]).abs)
+        #end
+      #end
+    #end
+  #end
  
   it 'can duplicate itself' do
     x = NArray[100,10,1]
@@ -365,3 +376,5 @@ class RunarrayNArrayUnitSpec < MiniTest::Spec
 
 
 end
+
+=end
