@@ -981,20 +981,20 @@ module Runarray
       end
 
       h1 = x[1] - x[0]
-      del1 = (y[1] - y[0]) / h1
-      dsave = del1
+      slope1 = (y[1] - y[0]) / h1
+      slope_save = slope1
 
       # special case length=2 --use linear interpolation
       if lengthLess1 < 2
-        derivs[0] = del1
-        derivs[1] = del1
+        derivs[0] = slope1
+        derivs[1] = slope1
         return derivs
       end 
 
       # Normal case (length >= 3)
 
       h2 = x[2] - x[1]
-      del2 = (y[2] - y[1]) / h2
+      slope2 = (y[2] - y[1]) / h2
 
       # SET D(1) VIA NON-CENTERED THREE-POINT FORMULA, ADJUSTED TO BE
       #     SHAPE-PRESERVING.
@@ -1002,12 +1002,12 @@ module Runarray
       hsum = h1 + h2
       w1 = (h1 + hsum)/hsum
       w2 = (h1*-1.0)/hsum
-      derivs[0] = (w1*del1) + (w2*del2)
-      if (( pchst(derivs[0], del1) ) <= 0)
+      derivs[0] = (w1*slope1) + (w2*slope2)
+      if (( pchst(derivs[0], slope1) ) <= 0)
         derivs[0] = @@zero
-      elsif ( pchst(del1, del2) < 0 )
+      elsif ( pchst(slope1, slope2) < 0 )
         # need to do this check only if monotonicity switches
-        dmax = del1 * three
+        dmax = slope1 * three
         if (derivs[0].abs > dmax.abs) 
           derivs[0] = dmax
         end 
@@ -1018,13 +1018,13 @@ module Runarray
           h1 = h2
           h2 = x[ind+1] - x[ind]
           hsum = h1 + h2
-          del1 = del2
-          del2 = (y[ind+1] - y[ind])/h2
+          slope1 = slope2
+          slope2 = (y[ind+1] - y[ind])/h2
         end 
 
         derivs[ind] = @@zero
 
-        pchstval = pchst(del1, del2)
+        pchstval = pchst(slope1, slope2)
 
         klass = self.class
 
@@ -1032,23 +1032,23 @@ module Runarray
           hsumt3 = hsum+hsum+hsum
           w1 = (hsum + h1)/hsumt3
           w2 = (hsum + h2)/hsumt3
-          dmax = klass.max( del1.abs, del2.abs )
-          dmin = klass.min( del1.abs, del2.abs )
-          drat1 = del1/dmax
-          drat2 = del2/dmax
+          dmax = klass.max( slope1.abs, slope2.abs )
+          dmin = klass.min( slope1.abs, slope2.abs )
+          drat1 = slope1/dmax
+          drat2 = slope2/dmax
           derivs[ind] = dmin/(w1*drat1 + w2*drat2)
         elsif (pchstval < 0 )
           ierr = ierr + 1
-          dsave = del2
+          slope_save = slope2
           next
         else   # equal to zero
-          if (del2 == @@zero) 
+          if (slope2 == @@zero) 
             next
           end
-          if (pchst(dsave,del2) < 0) 
+          if (pchst(slope_save,slope2) < 0) 
             ierr = ierr + 1 
           end
-          dsave = del2
+          slope_save = slope2
           next
         end 
       end
@@ -1056,12 +1056,12 @@ module Runarray
 
       w1 = (h2*-1.0)/hsum
       w2 = (h2 + hsum)/hsum
-      derivs[lengthLess1] = (w1*del1) + (w2*del2)
-      if ( pchst(derivs[lengthLess1], del2) <= 0 ) 
+      derivs[lengthLess1] = (w1*slope1) + (w2*slope2)
+      if ( pchst(derivs[lengthLess1], slope2) <= 0 ) 
         derivs[lengthLess1] = @@zero;
-      elsif ( pchst(del1, del2) < 0)
+      elsif ( pchst(slope1, slope2) < 0)
         # NEED DO THIS CHECK ONLY IF MONOTONICITY SWITCHES.
-        dmax = three*del2
+        dmax = three*slope2
         if (derivs[lengthLess1].abs > dmax.abs) 
           derivs[lengthLess1] = dmax
         end 
