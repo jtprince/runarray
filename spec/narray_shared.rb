@@ -1,15 +1,8 @@
-module ArrayEqual
-  # equal shape, dimensions, members
-  def array_equal(other)
-    cnt = 0
-    each do |x|
-      x.should.equal other[cnt]
-      cnt += 1
-    end
-  end
 
-  def deep_array_equal(other)
-    array_equal(other)
+module ArrayEqual
+
+  def equivalent_but_not_identical(other)
+    self.enums other
     self.object_id.should.not.equal other.object_id
   end
 end
@@ -36,11 +29,19 @@ shared 'an narray' do
 
 end
 
+shared 'initializing a 1D NArray' do
+  it 'with new' do
+    fna = @klass.new('float', 3)
+    fna[0] = 3
+    ina = @klass.new('int', 3)
+  end
+end
+
 shared "an empty 1D NArray" do
   before do
-    @klass
-    @typedef
-    @zero
+    #@klass
+    #@typedef
+    #@zero
   end
 
   it 'has proper dimension and shape introspection' do
@@ -73,7 +74,7 @@ end
 shared 'a normal 1D NArray' do
 
   before do
-    @array  # <- define this
+    # @array  # <- define this
     @narr = @klass.to_na(@array)
   end
 
@@ -84,11 +85,11 @@ shared 'a normal 1D NArray' do
   end
 
   it 'can be indexed into in narray idiosyncratic ways' do
-    @narr[true].deep_array_equal @array
-    @narr[3..2].deep_array_equal @array[2..3].reverse
-    @narr[].deep_array_equal @narr
-    @narr[[2,0]].deep_array_equal [@array[2], @array[0]]
-    @narr[[0]].deep_array_equal [@array[0]]
+    @narr[true].enums @array
+    @narr[3..2].enums @array[2..3].reverse
+    @narr[].enums @narr
+    @narr[[2,0]].enums [@array[2], @array[0]]
+    @narr[[0]].enums [@array[0]]
   end
 
 end

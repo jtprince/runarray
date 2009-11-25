@@ -1,0 +1,187 @@
+# NArray Tutorial
+
+There seem to be few (if any?) tutorials available to demonstrate the use of narray.  This is an attempt at that, mainly following the SPEC.en file available online and in the distribution itself.  (Much of this content is copied directly from the SPEC.en file)
+
+## Getting Started
+
+Windows:
+
+    'gem install narray'
+
+Ubuntu/Debian:
+
+    # from gem:
+    sudo aptitude install ruby-dev
+    gem install narray
+
+    # or just get the .deb package:
+    sudo aptitude install libnarray-ruby
+
+# NArray
+
+The actual class *NArray* is for numerical arrays of any dimensionality.  Start by requiring the file:
+
+    require 'narray'
+
+## Creating an NArray
+
+Now we can create some arrays:
+
+    arr = NArray.new('float', 3, 2) # a 3x2 array
+    arr = NArray.float(3,2) # same
+    # [ [ 0.0, 0.0, 0.0 ], 
+        [ 0.0, 0.0, 0.0 ] ]
+
+There are lots of values to choose from (this is from the SPEC).  Each of these will initialize to their respective *zero* :
+
+    NArray.byte(size,...)		1 byte unsigned integer
+    NArray.sint(size,...)		2 byte signed integer
+    NArray.int(size,...)		4 byte signed integer
+    NArray.sfloat(size,...)		single precision float
+    NArray.float(size,...)		double precision float
+    NArray.scomplex(size,...)   single precision complex
+    NArray.complex(size,...)    double precision complex
+
+This will initialize to *nil* :
+
+    NArray.object(size,...)		Ruby object
+
+If you already have an array of objects, you can transform it into an NArray:
+
+    # All integers:
+    NArray.to_na [[1,2,3],[4,5,6]] 
+    # ==> NArray.int(3,2)
+
+    # If you have a float in there, then it will be a float NArray:
+    NArray.to_na [[1,2, 3.0 ],[4,5,6]]  # <- notice the '3.0'
+    # ==> NArray.float(3,2)
+
+    # same with complex numbers:
+    NArray.to_na [[1,2.0,Complex(3,2)],[4,5,6]] 
+    ==>NArray.complex(3,2)
+
+What if your data is already packed away somewhere as single floats?
+
+    # pack our floats into a string to represent the data:
+    data_string = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0].pack('e*')
+
+    # now get an Narray:
+    NArray.to_na(data_string, 'sfloat')
+    # ==> NArray.sfloat(6): 
+    #    [ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 ]
+    
+    # make a 3 x 2 array:
+    NArray.to_na(data_string, 'sfloat', 3, 2)
+    # ==> NArray.sfloat(3,2): 
+    # [ [ 1.0, 2.0, 3.0 ], 
+    #   [ 4.0, 5.0, 6.0 ] ]
+
+How about the *quickest* , *easiest* way to make NArrays?
+
+    NArray[1,5,10.0]  #=>  NArray.float(3):[1.0, 5.0, 10.0]
+    NArray[1..10]     #=>  NArray.int(10):[1,2,3,4,5,6,7,8,9,10]
+
+## Assignment
+
+## Inspecting your NArray
+
+    a = NArray.to_na [[1,2,3],[4,5,6]] #  3x2
+    a.dim  # => 2  (two indices)
+    a.rank == a.dim
+    a.shape # => [3,2]
+    a.total # => 6
+
+## Basic Indexing
+
+NArrays are indexed fortran style!  That is the **opposite** of how you would index into an array!
+
+    array = [
+     [[1, 2], [3, 4]],
+     [[5, 6],  [7, 8]],
+     [[9, 10], [11, 12]]
+    ]
+
+    array[0][0][1]  # => 2
+    array[2][1][0]  # => 11
+
+    # NArray indices are in the opposite order:
+    a = NArray.to_na(array)
+    a[1,0,0]  # => 2
+    a[0,1,2]  # => 11
+
+We can also grab the elements out as if this were an array of a single dimension:
+
+    a[1] # => 2
+    a[10] # => 11
+    a[-2] # => 11  # negative indexing works
+    
+## Slicing and Dicing
+
+You can grab portions of your NArray in a lot of different ways (will accept Integer, Range, Array, boolean).  
+
+    b = NArray.to_na([[1,2,3],[4,5,6]]) 
+    # [ [1, 2, 3],
+    #   [4, 5, 6] ]
+
+    # NOTE: Return values are NArray objects (even though I'm not showing it)
+    b[1..2,0]   # => [2, 3]
+    b[2..1,0]   # => [3, 2]    (reverse order returned if range is reversed)
+
+    b[[0,2],0]     # => [1, 3]
+    b[[0,2], true] # => [ [1, 3], [4, 6] ]
+
+    # index into it as a one dimensional array:
+    b[ [0, 2, 5] ]  # => [ 1, 3, 6 ]
+    b[NArray.to_na([0, 2, 5])] # (same)  NArrays same as Arrays for slicing
+    b[ 1..4 ]       # => [ 2, 3, 4, 5 ]
+    b[ 0..-1 ]      # => [ 1, 2, 3, 4, 5, 6 ]
+    b[ true ] == b[0..-1]
+
+    b[] == b.dup
+
+NOTE: dimensions with a single member are collapsed using the [] notation, but *NOT* with 'slice':
+
+    b[0, true]     # => [ 1, 4 ]
+    b.slice(0, true) # => [ [1], [4] ]  # dimensions with one 
+
+**false** behaves like sort of like a \*true (splat true) in indexing -- it will fill in any leading or remaining indices with true for multiple dimension indexing:
+
+    # NOTE: using 'a' NArray from earlier example
+    # [[[1,2],[3,4]],[[5,6],[7,8]],[[9,10],[11,12]]]  
+    # a.shape == [2,2,3]
+
+    a[true, true, 0] => # [ [ 1, 2 ], [ 3, 4 ] ]
+    a[false, 0] == a[true, true, 0]
+    a[true, 0]  # => IndexError: # of index=2 != ary.dim=3
+
+    a[0, true, true] => # [ [ 1, 3 ], [ 5, 7 ], [ 9, 11 ] ]
+    a[0, false] == a[0, true, true]
+
+Slices can be directly modified by assignment:
+
+    b = NArray.to_na([[1,2,3],[4,5,6]])   # same 'b' as earlier
+
+    b[0, true] = 77
+    b  # => [ [ 77, 2, 3 ], [ 77, 5, 6 ] ]
+
+NOTE, once you assign a slice to another variable or chain a command, it is a **deep** copy!
+
+    b = NArray.to_na([[1,2,3],[4,5,6]])   # same 'b' as earlier
+    c = b[0, true]
+    c[] = 77  #   c is now: [ 77, 77 ]
+    b         #   b is still [ [ 1, 2, 3 ], [ 4, 5, 6 ] ]
+
+    slice = b[0,true].fill!(23)  # => [ 23, 23 ]
+    b         #   b is unmodified! [ [ 1, 2, 3 ], [ 4, 5, 6 ] ]
+
+## Masks
+
+
+## Filling it out
+  
+    # NOTE that indgen == indgen! and operates in place, returning self
+    x = NArray.int(3,2)
+    y = NArray.indgen(2)
+    x.object_id == y.object_id # => true
+
+    
