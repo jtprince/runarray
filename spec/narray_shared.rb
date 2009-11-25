@@ -1,16 +1,7 @@
 
-module ArrayEqual
-
-  def equivalent_but_not_identical(other)
-    self.enums other
-    self.object_id.should.not.equal other.object_id
-  end
-end
-
 shared 'an narray' do
 
   before do
-    @klass.module_eval "include ArrayEqual"
     case @typedef
     when 'float' 
       @zero = 0.0
@@ -32,12 +23,14 @@ end
 shared 'initializing a 1D NArray' do
   it 'with new' do
     fna = @klass.new('float', 3)
-    fna[0] = 3
-    ina = @klass.new('int', 3)
+    fna.size.is 3
+    fna.shape.is [3]
+    fna.enums [@zero, @zero, @zero]
   end
 end
 
 shared "an empty 1D NArray" do
+
   before do
     #@klass
     #@typedef

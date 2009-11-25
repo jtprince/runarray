@@ -4,7 +4,7 @@ require File.expand_path(File.dirname(__FILE__) + '/../narray_shared')
 require 'runarray/narray'
 
 class Object
-  # alias_method :old_must_equal, :must_equal
+ # alias_method :old_must_equal, :must_equal
 
  # def must_equal(*args)
     #if self.is_a? Runarray::NArray
@@ -19,7 +19,6 @@ class Object
 
 end
 
-
 %w(float int).each do |typedef|
   describe "an NArray #{typedef}" do
     before do
@@ -29,8 +28,6 @@ end
     behaves_like 'an narray'
   end
 end
-
-
 
 =begin
 class RunarrayNArrayUnitSpec < MiniTest::Spec
