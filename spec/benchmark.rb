@@ -5,41 +5,52 @@ require 'orderedhash'
 Len = 1000000
 NArr = NArray[0...Len].to_f
 Arr = (0...Len).to_a
+DataD = NArr.to_a.pack("E*")
+DataF = NArr.to_a.pack("e*")
 
 class BM
+  DEFAULT_NUM_REPEATS = 3
   attr_accessor :label
 
   # returns the BM object
-  def self.bm(label, &block)
-    obj = new(label)
+  def self.bm(label, repeats=DEFAULT_NUM_REPEATS, &block)
+    obj = new(label, repeats)
     block.call(obj)
     obj.bmbm
     obj
   end
 
-  def initialize(label, measurements=nil)
+  def initialize(label, repeats=DEFAULT_NUM_REPEATS)
+    @repeats = repeats
     @label = label
-    @measurements = measurements || OrderedHash.new
+    @to_measure = OrderedHash.new
+    @measurements = OrderedHash.new
+
+    @len = Len
+    @narr = NArr
+    @arr = Arr
+    @dataD = DataD
+    @dataF = DataF
   end
   
   def bmbm
     # fill in any ones without a block with the label
-    @measurements.each do |label, blk|
+    @to_measure.each do |label, blk|
       if blk.nil?
-        @measurements[label] = lambda { eval label }
+        @to_measure[label] = lambda { eval label }
       end
     end
     # rehearsal
-    @measurements.each do |label, blk|
+    @to_measure.each do |label, blk|
       Benchmark.measure &blk
     end
-    @measurements.each do |label, blk|
-      @measurements[label] = Benchmark.measure(&blk).utime
+    @to_measure.each do |label, blk|
+      @measurements[label] = Benchmark.measure{@repeats.times { blk.call } }.utime / @repeats
     end
   end
 
   def time(label, &block)
-    @measurements[label] = block
+    @to_measure[label] = block
   end
 
   # sorts by smallest times
@@ -52,81 +63,104 @@ end
 # Linux fortius 2.6.28-16-generic #55-Ubuntu SMP Tue Oct 20 19:48:24 UTC 2009 i686 GNU/Linux
 
 results = []
+
 results << BM.bm("initialize one-million floats 0...1e6") do |bm|
-  bm.time("(0...Len).to_a")
-  bm.time("(0...Len).to_a.map{|v| v.to_f}")
-  bm.time("(0...Len).to_a")
-  bm.time("NArray[0...Len].to_f")
-  bm.time("NArray.float(Len).indgen!")
-  bm.time("NArray.to_na((0...Len).to_a).to_f")
+  bm.time("(0...@len).to_a")
+  bm.time("(0...@len).to_a.map{|v| v.to_f}")
+  bm.time("(0...@len).to_a")
+  bm.time("NArray[0...@len].to_f")
+  bm.time("NArray.float(@len).indgen!")
+  bm.time("NArray.to_na((0...@len).to_a).to_f")
 end
+
 
 results << BM.bm("converting back and forth") do |bm|
   bm.time("NArr.to_a")
-  bm.time("NArray.to_na(Arr)")
-  bm.time("NArray[*Arr]")
+  bm.time("NArray.to_na(@arr)")
+  bm.time("NArray[*@arr]")
 end
 
 results << BM.bm("iteration") do |bm|
-  %w(Arr NArr).each do |ar|
+  %w(@arr @narr).each do |ar|
     bm.time("#{ar}.each {|v| v }")
   end
 end
 
-results << BM.bm("indexing") do |bm|
-  %w(Arr NArr).each do |ar|
-    bm.time("(0...Len).each {|i| #{ar}[i] }")
+results << BM.bm("indexing and setting") do |bm|
+  %w(@arr @narr).each do |ar|
+    bm.time("(0...@len).each {|i| #{ar}[i] }")
+    bm.time("(0...@len).each {|i| #{ar}[i] = i}" )
+  end
+  bm.time("(0...@len).each {|i| @arr[i] = i}; NArray.to_na(@arr)" )
+end
+
+results << BM.bm("sum") do |bm|
+  bm.time("@arr.inject(0.0, :+)")
+  bm.time("@arr.inject(0.0) {|sum, v| sum+v }")
+  bm.time("sum = 0.0 ; @arr.each {|v| sum += v }")
+  bm.time("@narr.sum")
+  bm.time("NArray.to_na(@arr).to_f.sum")
+end
+
+results << BM.bm("max") do |bm|
+  bm.time("@arr.max")
+  bm.time("@narr.max")
+end
+
+results << BM.bm("round") do |bm|
+  bm.time("@arr.map {|v| v.round }")
+  bm.time("@narr.round.to_i")
+  bm.time("@arr.map {|v| v.round.to_f }")
+  bm.time("@narr.round")
+end
+
+results << BM.bm("mean and standard deviation") do |bm|
+  @len = Len
+  @narr = NArr
+  @arr = Arr
+  @dataD = DataD
+  @dataF = DataF
+
+  bm.time("Array based with one pass through with :each") do
+    _len = @arr.size
+    _sum = 0.0
+    _sum_sq = 0.0
+    @arr.each do |val|
+      _sum += val
+      _sum_sq += val * val
+    end
+    std_dev = _sum_sq - ((_sum * _sum)/_len)
+    std_dev /= ( _len > 1 ? _len-1 : 1 )
+    std_dev = Math.sqrt(std_dev)
+    mean = _sum.to_f/_len
+  end
+  bm.time("NArray by hand") do
+    _len = @narr.size
+    _sum = 0.0
+    _sum_sq = 0.0
+    _sum = @narr.sum
+    _sum_sq = (@narr * @narr).sum
+    std_dev = _sum_sq - ((_sum * _sum)/_len)
+    std_dev /= ( _len > 1 ? _len-1 : 1 )
+    std_dev = Math.sqrt(std_dev)
+    mean = _sum.to_f/_len
+  end
+  bm.time("NArray, calling mean and stddev") do
+    mean = @narr.mean
+    std_dev = @narr.stddev
   end
 end
 
+results << BM.bm("unpacking from a string of floats", 10) do |bm|
+  bm.time('@dataD.unpack("E*")')
+  bm.time('@dataF.unpack("e*")')
+  bm.time('NArray.to_na(@dataD, "float")')
+  bm.time('NArray.to_na(@dataF, "sfloat")')
+  bm.time('NArray.to_na(@dataF, "sfloat").to_f.to_a')
+end
 
-puts results.map {|v| v.to_pairs}.to_yaml
+output = OrderedHash.new
+results.each {|v| output[v.label] = v.to_pairs}
 
-
-
-
-
-#@ar = (0...length).to_a.map {|v| v.to_f }
-#@fl = NArray.to_na(@ar)
-#@sfl = NArray.sfloat(@ar.size)
-#@sfl[true] = @fl[true]
-
-#puts "Iteration with #each is slightly faster with Array"
-
-#labels = ['array', 'NArray.float', 'NArray.sfloat']
-#bm.report(labels[0]) { @ar.each {|v| v * v } }
-#bm.report(labels[1]) { @fl.each {|v| v * v } }
-#bm.report(labels[2]) { @sfl.each {|v| v * v } }
-#end
-
-#labels.zip(reply) do |label, tms|
-#p label
-#puts "#{length.to_f / tms.utime}" + "element Hz" 
-#end
-
-
-#p reply 
-#abort 'her'
-
-
-##Benchmark.bmbm do |bm|
-##bm.report('array') { @ar.each {|v| v } }
-##bm.report('NArray.float') { @fl.each {|v| v } }
-##bm.report('NArray.sfloat') { @sfl.each {|v| v } }
-##end
-
-##puts '~100X faster to NArray#sum'
-
-##Benchmark.bmbm do |bm|
-##bm.report('array#inject(0.0, :+)') { @ar.inject(0.0, :+) }
-##bm.report('array#inject(0.0) {|sum, v| sum+v }') { @ar.inject(0.0) {|sum, v| sum+v } }
-##bm.report('array#each {|v| sum += v }') { sum = 0.0 ; @ar.each {|v| sum += v } }
-##bm.report('NArray.float') { sum = @fl.sum }
-##bm.report('NArray.sfloat') { sum = @sfl.sum }
-##end
-
-
-
-
-
+puts output.to_yaml
 

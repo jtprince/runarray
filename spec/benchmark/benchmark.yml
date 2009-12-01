@@ -1,0 +1,78 @@
+--- 
+initialize one-million floats 0...1e6: 
+- - NArray[0...@len].to_f
+  - 0.00333333333333326
+- - NArray.float(@len).indgen!
+  - 0.0266666666666667
+- - (0...@len).to_a
+  - 0.366666666666667
+- - NArray.to_na((0...@len).to_a).to_f
+  - 0.5
+- - (0...@len).to_a.map{|v| v.to_f}
+  - 1.07666666666667
+converting back and forth: 
+- - NArray.to_na(@arr)
+  - 0.0899999999999999
+- - NArray[*@arr]
+  - 0.0933333333333337
+- - NArr.to_a
+  - 0.103333333333333
+iteration: 
+- - "@arr.each {|v| v }"
+  - 0.563333333333333
+- - "@narr.each {|v| v }"
+  - 0.653333333333333
+indexing and setting: 
+- - (0...@len).each {|i| @arr[i] }
+  - 0.726666666666667
+- - (0...@len).each {|i| @arr[i] = i}
+  - 0.773333333333333
+- - (0...@len).each {|i| @arr[i] = i}; NArray.to_na(@arr)
+  - 0.890000000000001
+- - (0...@len).each {|i| @narr[i] = i}
+  - 0.97
+- - (0...@len).each {|i| @narr[i] }
+  - 1.0
+sum: 
+- - "@narr.sum"
+  - 0.00666666666666771
+- - NArray.to_na(@arr).to_f.sum
+  - 0.0966666666666664
+- - "@arr.inject(0.0, :+)"
+  - 0.446666666666668
+- - sum = 0.0 ; @arr.each {|v| sum += v }
+  - 0.806666666666667
+- - "@arr.inject(0.0) {|sum, v| sum+v }"
+  - 1.45666666666667
+max: 
+- - "@narr.max"
+  - 0.00666666666666534
+- - "@arr.max"
+  - 0.406666666666669
+round: 
+- - "@narr.round"
+  - 0.0333333333333314
+- - "@narr.round.to_i"
+  - 0.0666666666666676
+- - "@arr.map {|v| v.round }"
+  - 0.706666666666666
+- - "@arr.map {|v| v.round.to_f }"
+  - 0.840000000000001
+mean and standard deviation: 
+- - NArray by hand
+  - 0.0100000000000004
+- - NArray, calling mean and stddev
+  - 0.0700000000000003
+- - Array based with one pass through with :each
+  - 1.64666666666667
+unpacking from a string of floats: 
+- - NArray.to_na(@dataF, "sfloat")
+  - 0.00899999999999963
+- - NArray.to_na(@dataD, "float")
+  - 0.0210000000000001
+- - "@dataD.unpack(\"E*\")"
+  - 0.0740000000000002
+- - "@dataF.unpack(\"e*\")"
+  - 0.0780000000000001
+- - NArray.to_na(@dataF, "sfloat").to_f.to_a
+  - 0.082
