@@ -70,10 +70,13 @@ module Runarray
       end
       ma
     end
+  end
+end
 
 
 
 
+=begin
 
     # Returns (x, y) where any data points 
     # in cartesion coords(self,y) that are > 'deviations' from the 
@@ -422,6 +425,9 @@ module Runarray
 
     alias_method :loess, :lowess
 
+
+=end
+
 =begin
   # complete rewrite of the 
   # returns empty derivs for size == 0
@@ -467,6 +473,8 @@ module Runarray
     end
   end
 =end
+
+=begin
 
     # difference between max and min
     def spread
@@ -863,7 +871,6 @@ module Runarray
 end
 
 
-=begin
   # in progress on this guy: moving average
   def moving_avg(pre=1, post=1)
     ar_size = size
@@ -904,6 +911,5 @@ end
     mv_avg
   end
 
+
 =end
-
-
