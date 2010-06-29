@@ -1,10 +1,4 @@
-
 require 'rubygems'
-require 'minitest/spec'
+require 'spec/more'
 
-MiniTest::Unit.autorun
-
-
-def xit(*args, &block)
-  puts "SKIPPING: #{args}"
-end
+Bacon.summary_on_exit

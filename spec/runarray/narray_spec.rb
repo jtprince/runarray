@@ -1,35 +1,23 @@
-require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require File.dirname(__FILE__) + '/../spec_helper'
 
 require 'narray'
 require 'runarray/narray'
 
-class Object
-  alias_method :old_must_equal, :must_equal
+shared 'initializes' do
 
-  def must_equal(*args)
-    if self.is_a? Runarray::NArray
-      other = args.first
-      self.each_with_index do |v,i|
-        v.old_must_equal other[i]
-      end
-    else
-      self.old_must_equal(*args)
-    end
+  before do
+    @klass = nil  # you define the class
+  end
+
+  it 'initializes with different types' do
+    @klass.float(3).enums [0.0, 0.0, 0.0]
+    @klass.object(3).enums [nil, nil, nil]
+    #@klass.byte(3).enums [ ]
   end
 
 end
 
-class MimicNArrayUsageSpec < MiniTest::Spec
-
-  it 'initializes floats' do
-    na = NArray.float(10)
-    runa = Runarray::NArray.float(10)
-    runa.must_equal na
-  end
-
-end
-
-class RunarrayNArrayUnitSpec < MiniTest::Spec
+shared do
   include Runarray
 
   def initialize(*args)
